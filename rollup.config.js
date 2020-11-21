@@ -4,6 +4,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
+import replace from '@rollup/plugin-replace'
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -28,6 +29,30 @@ function serve() {
 	};
 }
 
+function proxy() {
+  let started = false
+
+  return {
+    writeBundle() {
+      if(!started) {
+        started = true
+
+        let host = process.env.HOST || 'localhost'
+        let port = process.env.PORT || 8080
+
+        let cors_proxy = require('cors-anyware')
+        cors_proxy.createServer({
+          originWhitelist: [],
+          requireHeader: ['origin', 'x-requested-with'],
+          removeHeaders: ['cookie', 'cookie2']
+        }).listen(port, host, ()=>{
+          console.log('Running CORS Anywhere on ' + host + port)
+        })
+      }
+    }
+  }
+}
+
 export default {
 	input: 'src/main.js',
 	output: {
@@ -37,6 +62,9 @@ export default {
 		file: 'public/build/bundle.js'
 	},
 	plugins: [
+    replace({
+      'CORS_PROXY_URL': production ? '' : 'http://localhost:8080'
+    }),
 		svelte({
 			// enable run-time checks when not in production
 			dev: !production,

@@ -1,44 +1,56 @@
-<script lang="ts">
-  export let googlemapKey;
-  import Map from './Map.svelte';
-  export let ready;
+<script>
+	import { onMount } from 'svelte';
+	import store from './store.js';
+	import Message from './message.svelte';
+	let message;
+	let messages = [];
+
+	onMount(() => {
+		store.subscribe(currentMessage => {
+				messages = [...messages, currentMessage];
+		})
+	})
+	
+	function onSendMessage() {
+		 if (message.length > 0) {
+			 store.sendMessage(message);
+			 message = "";
+		 }
+	}
 </script>
 
-<svelte:head>
-	<script defer async
-	src="https://maps.googleapis.com/maps/api/js?key={googlemapKey}&callback=initMap">
-	</script>
-</svelte:head>
+<h1>Hello Chat</h1>
 
-<main>
-	<h1>Test!</h1>
-  { #if ready }
-    <Map></Map>
-  { /if }
-</main>
+<input type="text" bind:value={message} />
+<button on:click={onSendMessage}>
+	Send Message
+</button>
+{#each messages as message, i}
+		<Message {message} direction={i % 2 == 0 ? "left" :  "right" } />
+{/each}
 
-<style>
-:global(body) {
-	padding: 0;
-}
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
+<h2>
+	Server Instructions
+</h2>
+<ol>
+	<li>git clone https://github.com/phptuts/node-relay-server.git</li>
+	<li>cd node-relay-server</li>
+	<li>npm install</li>
+	<li>node app.js</li>
+	<li>Setup an account with <a href="https://ngrok.com/">ngrok</a>.</li>
+	<li>npm install -g ngrok</li>
+	<li>ngrok authtoken "your auth token"</li>
+	<li>ngrok http 3000</li>
+	<li>Go into message-store.js file and replace it with your ngrok url</li>
+</ol>
 
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
-	}
+<h3>
+	Notes
+</h3>
 
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
-</style>
+In this svelte tip I use <a href="https://chrome.google.com/webstore/detail/smart-websocket-client/omalebghpgejjiaoknljcfmglgbpocdp">Smart Web Client</a>.
+
+<h2>
+	<a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSocket">Docs</a>
+</h2>
 
